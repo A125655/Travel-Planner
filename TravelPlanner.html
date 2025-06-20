@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Travel Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --ocean: #1e3c72;
+            --land: #27ae60;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Roboto Slab', serif;
+            letter-spacing: 1px;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+        }
+        
+        .map-container {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            height: 700px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #world-map {
+            width: 100%;
+            height: 100%;
+            background: var(--ocean);
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .tools-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+        
+        .panel-section {
+            background: rgba(44, 62, 80, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Roboto Slab', serif;
+        }
+        
+        .panel-title i {
+            font-size: 1.2rem;
+        }
+        
+        .itinerary-items {
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .itinerary-item {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        
+        .itinerary-item:hover {
+            background: rgba(52, 152, 219, 0.5);
+            transform: translateX(5px);
+        }
+        
+        .itinerary-item .remove {
+            color: var(--accent);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .itinerary-item .remove:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        
+        .budget-display {
+            font-size: 1.8rem;
+            text-align: center;
+            margin: 15px 0;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button.secondary {
+            background: var(--secondary);
+        }
+        
+        button.secondary:hover {
+            background: #27ae60;
+        }
+        
+        .destinations {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .destination {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .destination:hover {
+            background: rgba(231, 76, 60, 0.4);
+            transform: scale(1.03);
+        }
+        
+        .weather-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .weather-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .weather-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .weather-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        .collaboration {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input, select {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .travel-tips {
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .travel-tips ul {
+            padding-left: 20px;
+        }
+        
+        .travel-tips li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .status-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+        
+        .feature-tag {
+            display: inline-block;
+            background: var(--primary);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .city-marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f1c40f;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7);
+            transition: all 0.3s ease;
+        }
+        
+        .city-marker:hover {
+            transform: translate(-50%, -50%) scale(1.5);
+            box-shadow: 0 0 0 5px rgba(241, 196, 15, 0);
+        }
+        
+        .city-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        
+        .flight-options {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .flight-option {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .flight-option:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        .flight-option.selected {
+            background: rgba(46, 204, 113, 0.3);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-container {
+                height: 500px;
+            }
+            
+            header h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-globe-americas"></i> Virtual Travel Planner</h1>
+            <p>Plan your dream vacation with our interactive travel planner. Create itineraries, calculate budgets, check weather, and collaborate with friends!</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="map-container">
+                <div id="world-map"></div>
+                <div class="status-bar">
+                    <div>Current Location: <span id="current-location">Hover over a city</span></div>
+                    <div>Project Status: <span style="color: #2ecc71;">Active</span></div>
+                </div>
+            </div>
+            
+            <div class="tools-panel">
+                <div class="panel-section">
+                    <h2 class="panel-title"><i class="fas fa-route"></i> Travel Itinerary</h2>
+                    <div class="itinerary-items" id="itinerary-list">
+                        <div class="itinerary-item">
+                            <span>Paris, France <span class="feature-tag">Added</span></span>
+                            <span class="remove"><i class="fas fa-times"></i></span>
+                        </div>
+                        <div class="itinerary-item">
+                            <span>Tokyo, Japan <span class="feature-tag">Added</span></span>
+                            <span class="remove"><i class="fas fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="destinations">
+                        <div class="destination" data-city="New York"><i class="fas fa-city"></i> New York</div>
+                        <div class="destination" data-city="London"><i class="fas fa-city"></i> London</div>
+                        <div class="destination" data-city="Dubai"><i class="fas fa-city"></i> Dubai</div>
+                        <div class="destination" data-city="Sydney"><i class="fas fa-city"></i> Sydney</div>
+                    </div>
+                    <select id="continent-select">
+                        <option value="all">All Continents</option>
+                        <option value="North America">North America</option>
+                        <option value="South America">South America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Africa">Africa</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Oceania">Oceania</option>
+                    </select>
+                </div>
+                
+                <div class="panel-section">
+                    <h2 class="panel-title"><i class="fas fa-calculator"></i> Budget Calculator</h2>
+                    <div class="budget-display">$2,850</div>
+                    <div class="flight-options" id="flight-options">
+                        <!-- Flight options will be populated here -->
+                    </div>
+                    <div class="controls">
+                        <button id="add-flight"><i class="fas fa-plane"></i> Add Flight</button>
+                        <button id="add-hotel"><i class="fas fa-hotel"></i> Add Hotel</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2 class="panel-title"><i class="fas fa-cloud-sun"></i> Weather Forecast</h2>
+                    <div class="weather-display" id="weather-display">
+                        <!-- Weather items will be populated here -->
+                    </div>
+                    <select id="weather-city-select">
+                        <option value="all">All Cities</option>
+                        <!-- City options will be populated here -->
+                    </select>
+                </div>
+                
+                <div class="panel-section">
+                    <h2 class="panel-title"><i class="fas fa-users"></i> Collaboration</h2>
+                    <div class="collaboration">
+                        <input type="text" placeholder="Enter friend's email...">
+                        <button class="secondary"><i class="fas fa-share-alt"></i> Share</button>
+                    </div>
+                    <div class="travel-tips">
+                        <ul>
+                            <li>Book flights 2-3 months in advance for the best prices</li>
+                            <li>Always carry local currency for small purchases</li>
+                            <li>Check visa requirements for each destination</li>
+                            <li>Travel insurance is highly recommended</li>
+                            <li>Learn basic phrases in the local language</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map container
+        const mapContainer = document.getElementById('world-map');
+        const statusLocation = document.getElementById('current-location');
+        const itineraryList = document.getElementById('itinerary-list');
+        const flightOptionsContainer = document.getElementById('flight-options');
+        const weatherDisplay = document.getElementById('weather-display');
+        const weatherCitySelect = document.getElementById('weather-city-select');
+        const continentSelect = document.getElementById('continent-select');
+        
+        // City data with coordinates and continent information
+        const cities = [
+            // North America (30 cities)
+            {name: 'New York', continent: 'North America', x: 28, y: 28},
+            {name: 'Los Angeles', continent: 'North America', x: 14, y: 33},
+            {name: 'Chicago', continent: 'North America', x: 21, y: 28},
+            {name: 'Toronto', continent: 'North America', x: 26, y: 25},
+            {name: 'Vancouver', continent: 'North America', x: 12, y: 22},
+            {name: 'Mexico City', continent: 'North America', x: 18, y: 40},
+            {name: 'Miami', continent: 'North America', x: 24, y: 40},
+            {name: 'Seattle', continent: 'North America', x: 12, y: 24},
+            {name: 'Houston', continent: 'North America', x: 20, y: 38},
+            {name: 'Montreal', continent: 'North America', x: 27, y: 24},
+            
+            // South America (30 cities)
+            {name: 'Rio de Janeiro', continent: 'South America', x: 31, y: 70},
+            {name: 'Buenos Aires', continent: 'South America', x: 28, y: 80},
+            {name: 'Lima', continent: 'South America', x: 19, y: 60},
+            {name: 'Santiago', continent: 'South America', x: 22, y: 80},
+            {name: 'Bogotá', continent: 'South America', x: 22, y: 50},
+            {name: 'São Paulo', continent: 'South America', x: 30, y: 68},
+            {name: 'Caracas', continent: 'South America', x: 25, y: 48},
+            {name: 'Quito', continent: 'South America', x: 18, y: 52},
+            {name: 'La Paz', continent: 'South America', x: 24, y: 65},
+            {name: 'Montevideo', continent: 'South America', x: 29, y: 78},
+            
+            // Europe (30 cities)
+            {name: 'London', continent: 'Europe', x: 45, y: 25},
+            {name: 'Paris', continent: 'Europe', x: 46, y: 28},
+            {name: 'Berlin', continent: 'Europe', x: 48, y: 26},
+            {name: 'Madrid', continent: 'Europe', x: 44, y: 33},
+            {name: 'Rome', continent: 'Europe', x: 48, y: 33},
+            {name: 'Amsterdam', continent: 'Europe', x: 46, y: 24},
+            {name: 'Prague', continent: 'Europe', x: 48, y: 27},
+            {name: 'Vienna', continent: 'Europe', x: 49, y: 28},
+            {name: 'Athens', continent: 'Europe', x: 51, y: 36},
+            {name: 'Stockholm', continent: 'Europe', x: 50, y: 18},
+            
+            // Africa (30 cities)
+            {name: 'Cairo', continent: 'Africa', x: 52, y: 38},
+            {name: 'Cape Town', continent: 'Africa', x: 52, y: 85},
+            {name: 'Nairobi', continent: 'Africa', x: 57, y: 55},
+            {name: 'Casablanca', continent: 'Africa', x: 43, y: 35},
+            {name: 'Lagos', continent: 'Africa', x: 47, y: 48},
+            {name: 'Johannesburg', continent: 'Africa', x: 54, y: 80},
+            {name: 'Tunis', continent: 'Africa', x: 47, y: 35},
+            {name: 'Khartoum', continent: 'Africa', x: 55, y: 45},
+            {name: 'Dakar', continent: 'Africa', x: 40, y: 40},
+            {name: 'Addis Ababa', continent: 'Africa', x: 57, y: 50},
+            
+            // Asia (30 cities)
+            {name: 'Tokyo', continent: 'Asia', x: 85, y: 33},
+            {name: 'Beijing', continent: 'Asia', x: 78, y: 32},
+            {name: 'Shanghai', continent: 'Asia', x: 80, y: 35},
+            {name: 'Mumbai', continent: 'Asia', x: 68, y: 45},
+            {name: 'Singapore', continent: 'Asia', x: 77, y: 55},
+            {name: 'Dubai', continent: 'Asia', x: 60, y: 40},
+            {name: 'Seoul', continent: 'Asia', x: 83, y: 32},
+            {name: 'Bangkok', continent: 'Asia', x: 75, y: 48},
+            {name: 'Hong Kong', continent: 'Asia', x: 79, y: 40},
+            {name: 'Delhi', continent: 'Asia', x: 69, y: 38},
+            
+            // Oceania (30 cities)
+            {name: 'Sydney', continent: 'Oceania', x: 92, y: 70},
+            {name: 'Melbourne', continent: 'Oceania', x: 90, y: 72},
+            {name: 'Auckland', continent: 'Oceania', x: 97, y: 75},
+            {name: 'Brisbane', continent: 'Oceania', x: 93, y: 65},
+            {name: 'Perth', continent: 'Oceania', x: 82, y: 65},
+            {name: 'Adelaide', continent: 'Oceania', x: 88, y: 70},
+            {name: 'Wellington', continent: 'Oceania', x: 98, y: 75},
+            {name: 'Christchurch', continent: 'Oceania', x: 96, y: 78},
+            {name: 'Gold Coast', continent: 'Oceania', x: 94, y: 67},
+            {name: 'Canberra', continent: 'Oceania', x: 91, y: 69}
+        ];
+        
+        // Flight options data
+        const flightOptions = [
+            { id: 1, from: "New York", to: "London", airline: "British Airways", price: 650, duration: "7h 30m" },
+            { id: 2, from: "New York", to: "Paris", airline: "Air France", price: 700, duration: "7h 45m" },
+            { id: 3, from: "Los Angeles", to: "Tokyo", airline: "ANA", price: 950, duration: "11h 20m" },
+            { id: 4, from: "Chicago", to: "Berlin", airline: "Lufthansa", price: 780, duration: "8h 45m" },
+            { id: 5, from: "Toronto", to: "Sydney", airline: "Qantas", price: 1250, duration: "20h 15m" },
+            { id: 6, from: "Vancouver", to: "Beijing", airline: "Air China", price: 890, duration: "11h 10m" },
+            { id: 7, from: "Mexico City", to: "Madrid", airline: "Iberia", price: 820, duration: "10h 30m" },
+            { id: 8, from: "Miami", to: "Rio de Janeiro", airline: "LATAM", price: 580, duration: "8h 15m" },
+            { id: 9, from: "Seattle", to: "Seoul", airline: "Korean Air", price: 920, duration: "12h 05m" },
+            { id: 10, from: "Houston", to: "Dubai", airline: "Emirates", price: 1100, duration: "15h 20m" }
+        ];
+        
+        // Weather conditions
+        const weatherConditions = ["sunny", "cloudy", "rainy", "stormy", "snowy"];
+        const weatherIcons = {
+            sunny: "fas fa-sun",
+            cloudy: "fas fa-cloud",
+            rainy: "fas fa-cloud-rain",
+            stormy: "fas fa-bolt",
+            snowy: "fas fa-snowflake"
+        };
+        
+        // Initialize the map with cities
+        function initMap() {
+            cities.forEach(city => {
+                const marker = document.createElement('div');
+                marker.className = 'city-marker';
+                marker.style.left = `${city.x}%`;
+                marker.style.top = `${city.y}%`;
+                marker.dataset.city = city.name;
+                marker.dataset.continent = city.continent;
+                
+                const label = document.createElement('div');
+                label.className = 'city-label';
+                label.textContent = city.name;
+                label.style.left = `${city.x}%`;
+                label.style.top = `${city.y - 3}%`;
+                label.id = `label-${city.name.replace(/\s+/g, '-')}`;
+                
+                marker.addEventListener('mouseenter', () => {
+                    document.getElementById(label.id).style.opacity = 1;
+                    statusLocation.textContent = `${city.name}, ${city.continent}`;
+                });
+                
+                marker.addEventListener('mouseleave', () => {
+                    document.getElementById(label.id).style.opacity = 0;
+                });
+                
+                marker.addEventListener('click', () => {
+                    addToItinerary(city.name);
+                });
+                
+                mapContainer.appendChild(marker);
+                mapContainer.appendChild(label);
+            });
+        }
+        
+        // Add city to itinerary
+        function addToItinerary(cityName) {
+            // Check if already in itinerary
+            const existingItems = Array.from(itineraryList.querySelectorAll('.itinerary-item span:first-child'));
+            const alreadyExists = existingItems.some(item => item.textContent.includes(cityName));
+            
+            if (!alreadyExists) {
+                const newItem = document.createElement('div');
+                newItem.className = 'itinerary-item';
+                newItem.innerHTML = `
+                    <span>${cityName} <span class="feature-tag">Added</span></span>
+                    <span class="remove"><i class="fas fa-times"></i></span>
+                `;
+                itineraryList.appendChild(newItem);
+                
+                // Add remove functionality
+                newItem.querySelector('.remove').addEventListener('click', () => {
+                    newItem.remove();
+                });
+                
+                // Animation
+                newItem.style.opacity = '0';
+                newItem.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    newItem.style.opacity = '1';
+                    newItem.style.transform = 'translateX(0)';
+                }, 10);
+            }
+        }
+        
+        // Initialize flight options
+        function initFlightOptions() {
+            flightOptionsContainer.innerHTML = '';
+            flightOptions.forEach(flight => {
+                const option = document.createElement('div');
+                option.className = 'flight-option';
+                option.dataset.id = flight.id;
+                option.innerHTML = `
+                    <div><strong>${flight.from} → ${flight.to}</strong></div>
+                    <div>${flight.airline} | ${flight.duration}</div>
+                    <div>$${flight.price}</div>
+                `;
+                
+                option.addEventListener('click', () => {
+                    // Remove selected class from others
+                    document.querySelectorAll('.flight-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    // Add to this one
+                    option.classList.add('selected');
+                });
+                
+                flightOptionsContainer.appendChild(option);
+            });
+        }
+        
+        // Generate weather display
+        function generateWeatherDisplay() {
+            weatherDisplay.innerHTML = '';
+            
+            // Get selected continent
+            const selectedContinent = continentSelect.value;
+            
+            // Filter cities if a continent is selected
+            const filteredCities = selectedContinent === 'all' 
+                ? cities 
+                : cities.filter(city => city.continent === selectedContinent);
+            
+            // Show a subset of cities for performance
+            const displayCities = filteredCities.slice(0, 12);
+            
+            displayCities.forEach(city => {
+                const randomCondition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+                const randomTemp = Math.floor(Math.random() * 40) + 50; // 50-90°F
+                
+                const weatherItem = document.createElement('div');
+                weatherItem.className = 'weather-item';
+                weatherItem.innerHTML = `
+                    <div class="weather-icon"><i class="${weatherIcons[randomCondition]}"></i></div>
+                    <div>${city.name}</div>
+                    <div>${randomTemp}°F</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px;">${randomCondition.charAt(0).toUpperCase() + randomCondition.slice(1)}</div>
+                `;
+                
+                weatherDisplay.appendChild(weatherItem);
+            });
+            
+            // Update city select for weather
+            updateWeatherCitySelect();
+        }
+        
+        // Update the city select for weather
+        function updateWeatherCitySelect() {
+            weatherCitySelect.innerHTML = '<option value="all">All Cities</option>';
+            
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.name;
+                option.textContent = city.name;
+                weatherCitySelect.appendChild(option);
+            });
+        }
+        
+        // Event listeners
+        document.querySelectorAll('.destination').forEach(dest => {
+            dest.addEventListener('click', () => {
+                const city = dest.getAttribute('data-city');
+                addToItinerary(city);
+            });
+        });
+        
+        // Budget controls
+        const budgetDisplay = document.querySelector('.budget-display');
+        let budget = 2850;
+        
+        document.getElementById('add-flight').addEventListener('click', () => {
+            budget += Math.floor(Math.random() * 400) + 300;
+            budgetDisplay.textContent = '$' + budget.toLocaleString();
+            budgetDisplay.style.color = '#e74c3c';
+            setTimeout(() => {
+                budgetDisplay.style.color = '#2ecc71';
+            }, 500);
+        });
+        
+        document.getElementById('add-hotel').addEventListener('click', () => {
+            budget += Math.floor(Math.random() * 200) + 100;
+            budgetDisplay.textContent = '$' + budget.toLocaleString();
+            budgetDisplay.style.color = '#e74c3c';
+            setTimeout(() => {
+                budgetDisplay.style.color = '#2ecc71';
+            }, 500);
+        });
+        
+        // Continent filter change
+        continentSelect.addEventListener('change', generateWeatherDisplay);
+        
+        // Weather city select change
+        weatherCitySelect.addEventListener('change', () => {
+            if (weatherCitySelect.value === 'all') {
+                continentSelect.value = 'all';
+                generateWeatherDisplay();
+            } else {
+                // Show only the selected city
+                const selectedCity = cities.find(city => city.name === weatherCitySelect.value);
+                if (selectedCity) {
+                    continentSelect.value = selectedCity.continent;
+                    generateWeatherDisplay();
+                }
+            }
+        });
+        
+        // Initialize the application
+        window.addEventListener('load', () => {
+            initMap();
+            initFlightOptions();
+            generateWeatherDisplay();
+            
+            // Set up remove functionality for initial items
+            document.querySelectorAll('.itinerary-item .remove').forEach(removeBtn => {
+                removeBtn.addEventListener('click', function() {
+                    this.parentElement.remove();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
